@@ -1,0 +1,8 @@
+*.jpeg
+*.jpg
+*.png
+*.bmp
+*.code-workspace
+*.pdf
+*.rar
+/cctv/news

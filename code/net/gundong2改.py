@@ -39,8 +39,8 @@ def caculate_A(i, fai1):
     if i == 0:
         return mat(eye(11,11,dtype=int))
     else:
-        return fai1 * caculate_A(i-1,fai1) 
-    
+        return fai1 * caculate_A(i-1,fai1)
+# 变量 x_j 对变量 x_i 的向前 H 期的广义预测误差方差   
 for n in range(979):
     fai1_data = save_data_fai1[:,:,n]
     Covariance_mat =  save_data_cov[:,:,n]
@@ -51,6 +51,7 @@ for n in range(979):
             sum_bottom = 0
             sigma_jj = Covariance_mat[j,j]
             ej = mat(eye(11, 11, dtype=int))[:,j]
+            # 预期天数为 10 天
             for h in range(10):
                 A_h = caculate_A(h, fai1 = fai1_data)
                 sum_bottom += ei.T * A_h * Covariance_mat * A_h.T * ei
@@ -67,6 +68,7 @@ np.save("D:/liquidity/shujv/daima/save_data_result",save_data_result)
 import numpy as np
 def standard_data(each):
     orig_data = each
+    # 计算比重
     sum_line = np.sum(orig_data, axis=1)
     result = np.divide(orig_data,sum_line)
     return sum_line, result
@@ -100,7 +102,7 @@ print (np.where(k==0.8823306709948058))
 '''
 gundongdata = gundongdata[0:969]
 gundongdata1 = pd.DataFrame(columns = ['values'])
-gundongdata1['values'] = gundongdata 
+gundongdata1['values'] = gundongdata
 #转换索引为datatimeindex形式才能画图
 gundongdata1.index = pd.to_datetime(data.index[369:])
 
