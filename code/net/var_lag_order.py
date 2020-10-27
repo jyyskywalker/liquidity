@@ -40,10 +40,10 @@ class var_lag_order():
         '''
         都是在 1% 的水平条件下满足
         '''
-        self.column_list = [column for column in self.data]
+        self.column_list = [column for column in self.initial_data]
         self.column_test = {}
         for column in self.column_list:
-            test = sm.tsa.stattools.adfuller(self.data[column])
+            test = sm.tsa.stattools.adfuller(self.initial_data[column])
             temp_list = [test[1]]
             temp_list.append(self.judge_percent(test))
             self.column_test[column] = temp_list
@@ -52,7 +52,7 @@ class var_lag_order():
         for i in range(int(len(self.column_list)/2)):
             if self.column_test[self.column_list[i]][1]=='1%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%':
                 test_list_1.append(self.column_list[i])
-                test_list_2.append(self.column_list[i+int(len(column_list)/2)])
+                test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
         self.column_list = test_list_1+test_list_2
         self.process_data = self.initial_data[self.column_list]
 
@@ -72,7 +72,7 @@ class var_lag_order():
         '''
         self.model.select_order(max_lag)
         self.results = self.model.fit(maxlags = max_lag, ic='aic')
-        return self.results.k_ar
+        return self.results
 
         
         
@@ -81,6 +81,6 @@ class var_lag_order():
         '''
         对每个数据变量进行 Granger 因果性检验
         '''
-        pass
+        
 
 

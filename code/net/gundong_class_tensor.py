@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 '''
-    进行动态预测的代码，用张量优化的版本
+    进行动态预测的代码
 '''
 import pandas as pd
 import numpy as np
+from numpy import *
+
 import matplotlib.pylab as plt
 import matplotlib.dates as mdate
-from numpy import *
 from matplotlib.pylab import rcParams
 plt.rcParams['axes.unicode_minus']=False
 rcParams['font.sans-serif'] = 'kaiti'
@@ -24,6 +25,7 @@ class gundong_tensor():
         self.data = data
         self.gundong_time = gundong_time # 滚动选择的时间
         self.k_lag = k_lag
+        self.column_list = [column for column in self.data]
         self.save_data_coef = np.zeros((self.row-self.gundong_time+1, self.column, self.k_lag*self.column))
         self.save_data_cov = np.zeros((self.row-self.gundong_time+1, self.column, self.column))
         self.save_data_result = np.zeros((self.row-self.gundong_time+1, self.column, self.column))
@@ -97,17 +99,63 @@ class gundong_tensor():
 
         self.save_data_result = sum_top/sum_bottom
 
-        def standard_overflow(self):
-            '''
-            计算溢出指数的比重
+    def standard_overflow(self):
+        '''
+        计算溢出指数的比重
+        '''
+        sum_line = np.sum(self.save_data_result, axis=2)
+        sum_line = sum_line.reshape(self.save_data_result.shape[0],self.save_data_result.shape[1],1)
+        self.save_data_result = np.divide(self.save_data_result, sum_line)
+        return sum_line, self.save_data_result
 
 
-            '''
-            pass
-
-
-    def save_data(self, path):
+    def save_data(self, path='./'):
+        '''
+        保存三种数据
+        '''
         np.save(path+'save_data_coef',self.save_data_coef)
         np.save(path+'save_data_cov',self.save_data_cov)
         np.save(path+'save_data_result',self.save_data_result)
+    
 
+    def plot_data_process(self, name):
+        '''
+        '''
+        # gundongdata = zeros(self.row-self.gundong_time+1)
+        xishu = self.save_data_result.diagonal(axis1=1, axis2=2)
+        xishu = np.apply_along_axis(np.diag, 1, xishu)
+        result_data = self.save_data_result-xishu
+        if name == 'total':
+            liehe = result_data.sum(axis=1)
+            ave = liehe.mean(axis=1)
+            return ave
+        else:
+            if name in self.column_list:
+                index = self.column_list.index(name)
+                out_ = result_data.sum(axis=1)[index]
+                in_ = result_data.sum(axis=2)[index]
+                net = out_-in_
+                return net
+            else:
+                return None
+
+
+    def plot(self, name):
+        '''
+        '''
+        gundongdata = self.plot_data_process(name)
+        gundongdata1 = pd.DataFrame(columns = ['values'])
+        gundongdata1['values'] = gundongdata[0:self.row-self.gundong_time-self.predict_time+1]
+        gundongdata1.index = pd.to_datetime(self.data.index[self.gundong_time+self.predict_time-1:])
+
+        values = gundongdata1['values']
+        time = gundongdata1.index
+        fig = plt.figure(figsize=(12,9))
+        ax = plt.subplot(111)
+        ax.xaxis.set_major_formatter(mdate.DateFormatter('%Y-%m-%d'))#显示日期
+        plt.xticks(pd.date_range(time[0],time[-1],freq='6M'),rotation=45)
+        plt.title(name)
+        ax.plot(time,values,color='#054E9F')
+        
+        plt.plot(gundongdata1)
+        plt.show()

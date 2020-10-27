@@ -134,7 +134,7 @@ for i in range(979):
     net = out_ - in_
     gundonggongyong[i] = net
 
-gundonggongyong1 = gundongdatagongyong1[0:969]
+gundonggongyong1 = gundongdatagongyong[0:969]
 gundonggongyong1 = pd.DataFrame(columns = ['values'])
 gundonggongyong1['values'] = gundonggongyong
 
@@ -287,7 +287,7 @@ xishu0
 for i in range(10):
     print(i)
     
-a = save_data_result[:,:,1068]  
+a = save_data_result[:,:,1068]
 Covariance_mat =  save_data_cov[:,:,0]
 Covariance_mat[1,1]
 
