@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 '''
     进行动态预测的代码
+
+    amihud 的单位对于方差分解没有影响
 '''
 import pandas as pd
 import numpy as np
@@ -47,7 +49,7 @@ class gundong_tensor():
             self.save_data_cov[i-self.gundong_time,:,:] = results.sigma_u
 
 
-    def calculate_multiply(self):
+    def __calculate_multiply(self):
         # 初始的 A_0,...A_{1-p}
 
         # 第一个分块矩阵是单位阵
@@ -77,7 +79,7 @@ class gundong_tensor():
         self.A_h = np.zeros((self.row-self.gundong_time+1, self.k_lag*self.column, self.column))
         self.A_h[:, 0:self.column,:] = np.identity(self.column)
         # 得到
-        matrix_multiply = self.calculate_multiply()
+        matrix_multiply = self.__calculate_multiply()
         temp = np.matmul(self.A_h[:,0:self.column,:],self.save_data_cov)
         sum_top = temp*temp
         # 得到一个对角阵
@@ -98,15 +100,18 @@ class gundong_tensor():
             sum_bottom = sum_bottom + np.matmul(temp_bottom, sigma_jj)
 
         self.save_data_result = sum_top/sum_bottom
+        self.__standard_overflow()
+        # return self.save_data_result
 
-    def standard_overflow(self):
+    def __standard_overflow(self):
         '''
         计算溢出指数的比重
         '''
         sum_line = np.sum(self.save_data_result, axis=2)
         sum_line = sum_line.reshape(self.save_data_result.shape[0],self.save_data_result.shape[1],1)
         self.save_data_result = np.divide(self.save_data_result, sum_line)
-        return sum_line, self.save_data_result
+        self.save_data_result = self.save_data_result*100
+        return self.save_data_result
 
 
     def save_data(self, path='./'):
@@ -117,23 +122,31 @@ class gundong_tensor():
         np.save(path+'save_data_cov',self.save_data_cov)
         np.save(path+'save_data_result',self.save_data_result)
     
+# -------------------------
 
-    def plot_data_process(self, name):
+
+    def __xishu_data_result(self):
+        '''
+        将每个矩阵的 [j,j] 元素变成0
+        '''
+        xishu = self.save_data_result.diagonal(axis1=1, axis2=2)
+        xishu = np.apply_along_axis(np.diag, 1, xishu)
+        self.xishu_data = self.save_data_result-xishu
+
+    def __plot_data_process(self, name):
         '''
         '''
         # gundongdata = zeros(self.row-self.gundong_time+1)
-        xishu = self.save_data_result.diagonal(axis1=1, axis2=2)
-        xishu = np.apply_along_axis(np.diag, 1, xishu)
-        result_data = self.save_data_result-xishu
+
         if name == 'total':
-            liehe = result_data.sum(axis=1)
+            liehe = self.xishu_data.sum(axis=1)
             ave = liehe.mean(axis=1)
             return ave
         else:
             if name in self.column_list:
                 index = self.column_list.index(name)
-                out_ = result_data.sum(axis=1)[index]
-                in_ = result_data.sum(axis=2)[index]
+                out_ = self.xishu_data.sum(axis=1)[:,index]
+                in_ = self.xishu_data.sum(axis=2)[:,index]
                 net = out_-in_
                 return net
             else:
@@ -142,8 +155,10 @@ class gundong_tensor():
 
     def plot(self, name):
         '''
+
         '''
-        gundongdata = self.plot_data_process(name)
+        self.__xishu_data_result()
+        gundongdata = self.__plot_data_process(name)
         gundongdata1 = pd.DataFrame(columns = ['values'])
         gundongdata1['values'] = gundongdata[0:self.row-self.gundong_time-self.predict_time+1]
         gundongdata1.index = pd.to_datetime(self.data.index[self.gundong_time+self.predict_time-1:])
@@ -159,3 +174,38 @@ class gundong_tensor():
         
         plt.plot(gundongdata1)
         plt.show()
+
+    def static_analysis(self, predict_time, path='xishu.csv'):
+        '''
+        如果做静态分析直接调用这个函数
+
+        Args:
+            predict_time: 预测时间长度
+        '''
+        if self.row-self.gundong_time+1==1:
+            self.VAR()
+            self.cal_overflow(predict_time=predict_time)
+            ##
+            self.__xishu_data_result()
+            xishu_data = self.xishu_data[0]
+            df = pd.DataFrame(xishu_data, columns = self.column_list)
+            df.index = self.column_list
+            df.loc['out']=df.apply(lambda x: x.sum())
+            df['in']=df.apply(lambda x: x.sum(),axis=1)
+            df.to_csv(path)
+            return df
+
+
+    def get_data_result(self):
+        '''
+        获取计算得到的结果
+        '''
+        return self.save_data_result
+
+    def get_data_xishu(self):
+        '''
+        获取xishu data
+        '''
+        return self.xishu_data
+
+
