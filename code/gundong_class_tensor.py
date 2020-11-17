@@ -153,7 +153,7 @@ class gundong_tensor():
                 return None
 
 
-    def plot(self, name):
+    def plot(self, name, save_plot=False):
         '''
 
         '''
@@ -173,7 +173,10 @@ class gundong_tensor():
         ax.plot(time,values,color='#054E9F')
         
         plt.plot(gundongdata1)
+        if save_plot==True:
+            plt.savefig(name+'.jpg')
         plt.show()
+
 
     def static_analysis(self, predict_time, path='xishu.csv'):
         '''
@@ -207,5 +210,12 @@ class gundong_tensor():
         获取xishu data
         '''
         return self.xishu_data
+
+    def plot_all(self, save_plot=False):
+        '''
+        plot all the stock dynamic 
+        '''
+        for name in self.column_list:
+            self.plot(name, save_plot)
 
 

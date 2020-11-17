@@ -25,6 +25,9 @@ class var_lag_order():
 
 
     def judge_percent(self, test):
+        '''
+        添加可以选择置信度的功能
+        '''
         if test:
             if test[0]<=test[4]['1%']:
                 return '1%'
@@ -36,9 +39,12 @@ class var_lag_order():
                 return None
         return None    
 
-    def test_stationary(self):
+    def test_stationary(self, degree='1%'):
         '''
         都是在 1% 的水平条件下满足
+
+        Args: 
+            degree: 置信度，1%，5%，10%三种
         '''
         self.column_list = [column for column in self.initial_data]
         self.column_test = {}
@@ -50,9 +56,20 @@ class var_lag_order():
         test_list_1 = []
         test_list_2 = []
         for i in range(int(len(self.column_list)/2)):
-            if self.column_test[self.column_list[i]][1]=='1%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%':
-                test_list_1.append(self.column_list[i])
-                test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+            if degree=='1%':
+                if self.column_test[self.column_list[i]][1]=='1%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%':
+                    test_list_1.append(self.column_list[i])
+                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+            elif degree=='5%':
+                if self.column_test[self.column_list[i]][1]=='1%' or '5%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%' or '5%':
+                    test_list_1.append(self.column_list[i])
+                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])         
+            elif degree=='10%':
+                if self.column_test[self.column_list[i]][1]=='1%' or '5%' or '10%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%' or '5%' or '10%':
+                    test_list_1.append(self.column_list[i])
+                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])   
+            else:
+                print('degree selection false')
         self.column_list = test_list_1+test_list_2
         self.process_data = self.initial_data[self.column_list]
 
