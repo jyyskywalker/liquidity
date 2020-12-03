@@ -193,7 +193,7 @@ for i in range(979):
     in_ = xishu_i.sum(axis = 1)[1]#第二行和
     net = out_ - in_
     gundongdichan[i] = net
-gundongdichan1 = gundongdichan1[0:969]    
+gundongdichan1 = gundongdichan1[0:969]
 gundongdichan1 = pd.DataFrame(columns = ['values'])
 gundongdichan1['values'] = gundongdichan
 #转换索引为datatimeindex形式才能画图

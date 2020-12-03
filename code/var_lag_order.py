@@ -55,21 +55,29 @@ class var_lag_order():
             self.column_test[column] = temp_list
         test_list_1 = []
         test_list_2 = []
-        for i in range(int(len(self.column_list)/2)):
-            if degree=='1%':
-                if self.column_test[self.column_list[i]][1]=='1%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%':
+        if degree=='1%':
+            for i in range(int(len(self.column_list)/2)):
+                temp1 = self.column_test[self.column_list[i]][1]
+                temp2 = self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]
+                if (temp1=='1%') and (temp2=='1%'):
                     test_list_1.append(self.column_list[i])
                     test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
-            elif degree=='5%':
-                if self.column_test[self.column_list[i]][1]=='1%' or '5%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%' or '5%':
+        elif degree=='5%':
+            for i in range(int(len(self.column_list)/2)):
+                temp1 = self.column_test[self.column_list[i]][1]
+                temp2 = self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]                
+                if (temp1=='1%' or temp1=='5%') and (temp2=='1%' or temp2=='5%'):
                     test_list_1.append(self.column_list[i])
-                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])         
-            elif degree=='10%':
-                if self.column_test[self.column_list[i]][1]=='1%' or '5%' or '10%' and self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]=='1%' or '5%' or '10%':
+                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+        elif degree=='10%':
+            for i in range(int(len(self.column_list)/2)):
+                temp1 = self.column_test[self.column_list[i]][1]
+                temp2 = self.column_test[self.column_list[i+int(len(self.column_list)/2)]][1]
+                if (temp1=='1%' or temp1=='5%' or temp1=='10%') and (temp2=='1%' or temp2=='5%' or temp2=='10%'):
                     test_list_1.append(self.column_list[i])
-                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])   
-            else:
-                print('degree selection false')
+                    test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+        else:
+            print('degree selection false')
         self.column_list = test_list_1+test_list_2
         self.process_data = self.initial_data[self.column_list]
 

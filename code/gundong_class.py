@@ -20,7 +20,7 @@ import statsmodels.stats.diagnostic
 from statsmodels.tsa.api import VAR
 
 
-class gundong_tensor():
+class gundong_class():
     def __init__(self, data, gundong_time, k_lag):
         self.row = data.shape[0] # 行长度
         self.column = data.shape[1] # 列长度
@@ -38,6 +38,7 @@ class gundong_tensor():
         并且保存矩阵的系数以及相关系数矩阵
         实现了 k-lag>1 时的向量值回归模型
 
+        k-lag: 向量值自回归的滞后系数
         '''
         for i in range(self.gundong_time, self.row+1,1):
             datai = self.data.iloc[i-self.gundong_time:i,:]
@@ -49,7 +50,7 @@ class gundong_tensor():
             self.save_data_cov[i-self.gundong_time,:,:] = results.sigma_u
 
 
-    def __calculate_multiply(self):
+    def _calculate_multiply(self):
         # 初始的 A_0,...A_{1-p}
 
         # 第一个分块矩阵是单位阵
@@ -79,7 +80,7 @@ class gundong_tensor():
         self.A_h = np.zeros((self.row-self.gundong_time+1, self.k_lag*self.column, self.column))
         self.A_h[:, 0:self.column,:] = np.identity(self.column)
         # 得到
-        matrix_multiply = self.__calculate_multiply()
+        matrix_multiply = self._calculate_multiply()
         temp = np.matmul(self.A_h[:,0:self.column,:],self.save_data_cov)
         sum_top = temp*temp
         # 得到一个对角阵
@@ -100,17 +101,17 @@ class gundong_tensor():
             sum_bottom = sum_bottom + np.matmul(temp_bottom, sigma_jj)
 
         self.save_data_result = sum_top/sum_bottom
-        self.__standard_overflow()
+        self._standard_overflow()
         # return self.save_data_result
 
-    def __standard_overflow(self):
+    def _standard_overflow(self):
         '''
         计算溢出指数的比重
         '''
         sum_line = np.sum(self.save_data_result, axis=2)
         sum_line = sum_line.reshape(self.save_data_result.shape[0],self.save_data_result.shape[1],1)
         self.save_data_result = np.divide(self.save_data_result, sum_line)
-        self.save_data_result = self.save_data_result*100
+        # self.save_data_result = self.save_data_result*100
         return self.save_data_result
 
 
@@ -125,16 +126,18 @@ class gundong_tensor():
 # -------------------------
 
 
-    def __xishu_data_result(self):
+    def _xishu_data_result(self):
         '''
-        将每个矩阵的 [j,j] 元素变成0
+        将 save_data_result 中每个矩阵的 [j,j] 元素变成0
         '''
         xishu = self.save_data_result.diagonal(axis1=1, axis2=2)
         xishu = np.apply_along_axis(np.diag, 1, xishu)
         self.xishu_data = self.save_data_result-xishu
 
-    def __plot_data_process(self, name):
+
+    def _plot_data_process(self, name):
         '''
+        计算 name 的动态净溢出数据
         '''
         # gundongdata = zeros(self.row-self.gundong_time+1)
 
@@ -155,10 +158,10 @@ class gundong_tensor():
 
     def plot(self, name, save_plot=False):
         '''
-
+        画出 name 的动态净溢出图像
         '''
-        self.__xishu_data_result()
-        gundongdata = self.__plot_data_process(name)
+        self._xishu_data_result()
+        gundongdata = self._plot_data_process(name)
         gundongdata1 = pd.DataFrame(columns = ['values'])
         gundongdata1['values'] = gundongdata[0:self.row-self.gundong_time-self.predict_time+1]
         gundongdata1.index = pd.to_datetime(self.data.index[self.gundong_time+self.predict_time-1:])
@@ -198,7 +201,8 @@ class gundong_tensor():
             df.to_csv(path)
             return df
 
-
+# -------------------------
+# 返回数据使用 
     def get_data_result(self):
         '''
         获取计算得到的结果
@@ -209,13 +213,13 @@ class gundong_tensor():
         '''
         获取xishu data
         '''
+        self._xishu_data_result()
         return self.xishu_data
 
-    def plot_all(self, save_plot=False):
+    def data_time(self):
         '''
-        plot all the stock dynamic 
+        返回 save_data_result 以及对应的 时间
         '''
-        for name in self.column_list:
-            self.plot(name, save_plot)
+        self._xishu_data_result()
 
-
+        return self.data.index[self.gundong_time-1:]
