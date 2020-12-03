@@ -57,6 +57,9 @@ amihud_to_yield_sum = amihud_to_yield_sum.sum(axis=1)
 yield_sum = yield_xishu.sum(axis=1)
 yield_sum = yield_sum.sum(axis=1)
 
+A_Y_B = yield_to_yield_sum + yield_to_amihud_sum+ amihud_to_yield_sum
+A_Y = yield_to_yield_sum + amihud_to_yield_sum
+
 plot_data = pd.DataFrame(columns=['yield'])
 plot_data['yield'] = yield_sum
 plot_data['yield_to_yield'] = yield_to_yield_sum
@@ -73,5 +76,11 @@ plt.xticks(pd.date_range(time[0],time[-1],freq='6M'),rotation=45)
 plt.title('compare')
 column_list = [columns for columns in plot_data]
 for name in column_list:
-    ax.plot(time, plot_data[name],label=name)
+    ax.plot(time, plot_data[name])
+    
+ax.plot(time,A_Y_B)
+ax.plot(time,A_Y)
+column_list.append('A_Y_B')
+column_list.append('A_Y')
+plt.legend(column_list)
 plt.show()
