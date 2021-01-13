@@ -61,7 +61,7 @@ class process_stock():
         # 将第一个和后面的合并
         for i in range(len(self.stock_list)-1):
             df_temp = self.get_stock(self.stock_list[i+1], market_type)
-            df_temp = self.process_stock(stock_list[i+1], df_temp)
+            df_temp = self.process_stock(self.stock_list[i+1], df_temp)
             df = pd.merge(df,df_temp)
         self.df = df
         # 改变顺序
