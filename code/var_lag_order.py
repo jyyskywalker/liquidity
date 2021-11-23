@@ -39,7 +39,7 @@ class var_lag_order():
                 return None
         return None    
 
-    def test_stationary(self, degree='1%'):
+    def test_stationary(self, degree):
         '''
         都是在 1% 的水平条件下满足
 
@@ -55,6 +55,7 @@ class var_lag_order():
             self.column_test[column] = temp_list
         test_list_1 = []
         test_list_2 = []
+        self.stock_index = []
         if degree=='1%':
             for i in range(int(len(self.column_list)/2)):
                 temp1 = self.column_test[self.column_list[i]][1]
@@ -62,6 +63,7 @@ class var_lag_order():
                 if (temp1=='1%') and (temp2=='1%'):
                     test_list_1.append(self.column_list[i])
                     test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+                    self.stock_index.append(i)
         elif degree=='5%':
             for i in range(int(len(self.column_list)/2)):
                 temp1 = self.column_test[self.column_list[i]][1]
@@ -69,6 +71,7 @@ class var_lag_order():
                 if (temp1=='1%' or temp1=='5%') and (temp2=='1%' or temp2=='5%'):
                     test_list_1.append(self.column_list[i])
                     test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+                    self.stock_index.append(i)
         elif degree=='10%':
             for i in range(int(len(self.column_list)/2)):
                 temp1 = self.column_test[self.column_list[i]][1]
@@ -76,28 +79,37 @@ class var_lag_order():
                 if (temp1=='1%' or temp1=='5%' or temp1=='10%') and (temp2=='1%' or temp2=='5%' or temp2=='10%'):
                     test_list_1.append(self.column_list[i])
                     test_list_2.append(self.column_list[i+int(len(self.column_list)/2)])
+                    self.stock_index.append(i)
         else:
             print('degree selection false')
         self.column_list = test_list_1+test_list_2
         self.process_data = self.initial_data[self.column_list]
 
-    def var_regression(self, k_lag=1):
+    def var_regression(self, k_lag = 1, ics = 'aic'):
         '''
         进行 k_lag 滞后的向量自回归并且返回结果
         '''
-        self.model = VAR(self.process_data)
-        self.results = self.model.fit(k_lag)
-        return self.results
-        
+
+        if self.process_data:
+            self.model = VAR(self.process_data)
+            self.results = self.model.fit(maxlags = k_lag, ics = ics)
+            return self.results
+        else:
+            print('no process data')
+            
 
 
-    def choice_of_order(self, max_lag):
+    def choice_of_order(self, max_lag=15):
         '''
         返回选取的最优滞后阶数 k-lag
         '''
-        self.model.select_order(max_lag)
-        self.results = self.model.fit(maxlags = max_lag, ic='aic')
-        return self.results
+        
+        if self.process_data:
+            self.model = VAR(self.process_data)
+            self.lag_order = model.select_order(max_lag)
+            return self.lag_order 
+        else:
+            print('no process data')
 
         
         
@@ -106,6 +118,17 @@ class var_lag_order():
         '''
         对每个数据变量进行 Granger 因果性检验
         '''
-        
 
+
+        
+        
+    def get_stock_index(self):
+        '''
+        返回满足序列稳定性的 stock 编号
+        '''
+
+        if self.stock_index:
+            return self.stock_index
+        else:
+            print('no stock index')
 
